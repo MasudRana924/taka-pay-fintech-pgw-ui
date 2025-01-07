@@ -42,7 +42,7 @@ const PaymentCheckout = () => {
         setError(data.message || 'Verification failed');
       }
     } catch (err) {
-      setError('Network error');
+      setError('A system error occurred, please try again');
     } finally {
       setLoading(false);
     }
@@ -58,7 +58,7 @@ const PaymentCheckout = () => {
         return;
       }
 
-      const response = await fetch('https://quick-pay-96uq.onrender.com/api/wallet/verifyOtp', {
+      const response = await fetch('https://quick-pay-96uq.onrender.com/api/otp/verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ phone, otp: formData.otp })
@@ -70,7 +70,37 @@ const PaymentCheckout = () => {
         setError(data.message || 'OTP verification failed');
       }
     } catch (err) {
-      setError('Network error');
+      setError('A system error occurred, please try again');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handle PIN Submit and make the API call for PIN verification
+  const handlePinSubmit = async () => {
+    setLoading(true);
+    try {
+      const phone = localStorage.getItem('phone');
+      if (!phone) {
+        setError('Phone number not found');
+        return;
+      }
+
+      const response = await fetch('https://quick-pay-96uq.onrender.com/api/pin/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone, password: formData.pin })
+      });
+      const data = await response.json();
+      if (data.status) {
+        setError(''); // Clear any previous error messages
+        console.log('PIN verified successfully');
+        // Proceed with the next step after PIN verification success
+      } else {
+        setError(data.message || 'PIN verification failed');
+      }
+    } catch (err) {
+      setError('A system error occurred, please try again');
     } finally {
       setLoading(false);
     }
@@ -116,7 +146,7 @@ const PaymentCheckout = () => {
       placeholder: 'XXXXX',
       maxLength: 5,
       name: 'pin',
-      onConfirm: () => console.log('Payment completed'),
+      onConfirm: handlePinSubmit,
       disabled: formData.pin.length !== 5,
       input: formData.pin
     }
@@ -157,8 +187,8 @@ const PaymentCheckout = () => {
         </div>
 
         {/* Input Section */}
-        <div className="h-[230px] flex flex-col items-center justify-between mt-4 mb-6 p-4 bg-gray-50 rounded-lg border border-gray-100 mx-6 w-11/12" >
-          <label className="text-gray-900 text-md mb-4 text-center">
+        <div className="h-[250px] flex flex-col items-center justify-between mt-4 mb-6 p-4 bg-gray-50 rounded-lg border border-gray-100 mx-6 w-11/12" >
+          <label className="text-gray-900 text-md text-center">
             {currentScreenData.title}
           </label>
           <input
