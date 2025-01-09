@@ -329,7 +329,7 @@ const PaymentCheckout = () => {
         {/* Footer */}
         <div className="m-6 pt-4 border-t border-gray-100">
           <p className="text-xs text-gray-500 text-center">
-            Secured by <span style={{color:'#ef233c'}}>TakaPay</span> © 2025
+            Secured by <span className='text-md font-medium' style={{color:'#ef233c'}}>TakaPay</span> © 2025
           </p>
         </div>
       </div>
